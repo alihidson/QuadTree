@@ -47,12 +47,30 @@ def build_quadtree(image, x, y, size):
 
         return Node(x, y, size, top_left=top_left, top_right=top_right, bottom_left=bottom_left, bottom_right=bottom_right)
 
-
+def TreeDepth(node):
+    if node.is_leaf():
+        return 1
+    else:
+        depths = []
+        if node.top_left:
+            depths.append(TreeDepth(node.top_left))
+        if node.top_right:
+            depths.append(TreeDepth(node.top_right))
+        if node.bottom_left:
+            depths.append(TreeDepth(node.bottom_left))
+        if node.bottom_right:
+            depths.append(TreeDepth(node.bottom_right))
+        
+        return 1 + max(depths) if depths else 0
 
 # Loading image
-image = load_image("472034.png")
+image = load_image("one-color.png")
 
 height, width, _ = image.shape
 
 if height == width:
     quadtree = build_quadtree(image, 0, 0, height)
+
+# Calculate and print tree depth
+depth = TreeDepth(quadtree)
+print(f"The depth of the quadtree is: {depth}")
