@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 
+
 class Node:
     def __init__(self, x, y, size, color=None, pixels=None, top_left=None, top_right=None, bottom_left=None, bottom_right=None):
         self.x = x
@@ -16,9 +17,23 @@ class Node:
     def is_leaf(self):
         return self.top_left is None and self.top_right is None and self.bottom_left is None and self.bottom_right is None
 
+
+
+
 def load_image(file_path):
     image = Image.open(file_path).convert('RGB')
     return np.array(image)
+
+
+
+
+def save_image(image_array, file_name):
+    image = Image.fromarray(image_array)
+    image.save(file_name)
+
+
+
+
 
 def is_uniform_color(image, x, y, size):
     color = image[y, x]
@@ -47,6 +62,26 @@ def build_quadtree(image, x, y, size):
 
         return Node(x, y, size, top_left=top_left, top_right=top_right, bottom_left=bottom_left, bottom_right=bottom_right)
 
+
+
+def compress_image(image, target_size):
+    height, width, _ = image.shape
+    block_size = height // target_size
+    compressed_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
+
+    for i in range(target_size):
+        for j in range(target_size):
+            block = image[i * block_size: (i + 1) * block_size, j * block_size: (j + 1) * block_size]
+            avg_color = np.mean(block, axis=(0, 1))
+            compressed_image[i, j] = avg_color
+
+    return compressed_image
+
+
+
+
+
+
 def TreeDepth(node):
     if node.is_leaf():
         return 1
@@ -63,8 +98,11 @@ def TreeDepth(node):
         
         return 1 + max(depths) if depths else 0
 
+
+
+
 # Loading image
-image = load_image("one-color.png")
+image = load_image("two.jpg")
 
 height, width, _ = image.shape
 
@@ -74,3 +112,9 @@ if height == width:
 # Calculate and print tree depth
 depth = TreeDepth(quadtree)
 print(f"The depth of the quadtree is: {depth}")
+
+
+# compress size of image
+target_size_for_compress = 8
+compressed_image = compress_image(image, target_size_for_compress)
+save_image(compressed_image, "compressed_image.png")
