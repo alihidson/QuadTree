@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 
 class Node:
@@ -71,17 +72,33 @@ def build_quadtree(image, x, y, size):
 
 
 
-def compress_image(image, target_size):
-    height, width, _ = image.shape
-    block_size = height // target_size
+def compress_from_quadtree(node, target_size):
     compressed_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
+    scale_factor = node.size // target_size
 
-    for i in range(target_size):
-        for j in range(target_size):
-            block = image[i * block_size: (i + 1) * block_size, j * block_size: (j + 1) * block_size]
-            avg_color = np.mean(block, axis=(0, 1))
-            compressed_image[i, j] = avg_color
+    def fill_image_from_node(node):
+        if node.is_leaf():
+            
+            start_x = node.x // scale_factor
+            start_y = node.y // scale_factor
+            size = node.size // scale_factor
 
+            
+            for i in range(start_y, start_y + size):
+                for j in range(start_x, start_x + size):
+                    compressed_image[i, j] = node.color
+        else:
+            
+            if node.top_left:
+                fill_image_from_node(node.top_left)
+            if node.top_right:
+                fill_image_from_node(node.top_right)
+            if node.bottom_left:
+                fill_image_from_node(node.bottom_left)
+            if node.bottom_right:
+                fill_image_from_node(node.bottom_right)
+
+    fill_image_from_node(node)
     return compressed_image
 
 
@@ -108,7 +125,7 @@ def TreeDepth(node):
 
 
 
-def pixelDepth(node, x, y, current_depth=0):
+def pixelDepth(node, x, y, current_depth=1):
     
     if node.is_leaf():
         
@@ -134,7 +151,7 @@ def pixelDepth(node, x, y, current_depth=0):
 
 
 # Loading image
-image = load_image("two.jpg")
+image = load_image("one-color.png")
 
 height, width, _ = image.shape
 
@@ -148,8 +165,9 @@ print(f"The depth of the quadtree is: {depth}")
 
 # compress size of image
 target_size_for_compress = 8
-compressed_image = compress_image(image, target_size_for_compress)
-save_image(compressed_image, "compressed_image.png")
+compressed_image_from_tree = compress_from_quadtree(quadtree, target_size_for_compress)
+save_image(compressed_image_from_tree, "compressed_image_from_tree.png")
+
 
 
 x, y = 4, 5
