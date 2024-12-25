@@ -9,6 +9,7 @@ class Node:
         self.size = size
         self.color = color
         self.pixels = pixels
+        
         self.top_left = top_left
         self.top_right = top_right
         self.bottom_left = bottom_left
@@ -45,6 +46,9 @@ def is_uniform_color(image, x, y, size):
             pixels.append((i, j, tuple(image[i, j])))  # Storing coordinates and color
     return True, pixels
 
+
+
+
 def build_quadtree(image, x, y, size):
     if size == 1:
         return Node(x, y, size, color=tuple(image[y, x]), pixels=[(x, y, tuple(image[y, x]))])
@@ -61,6 +65,9 @@ def build_quadtree(image, x, y, size):
         bottom_right = build_quadtree(image, x + half_size, y + half_size, half_size)
 
         return Node(x, y, size, top_left=top_left, top_right=top_right, bottom_left=bottom_left, bottom_right=bottom_right)
+
+
+
 
 
 
@@ -101,6 +108,31 @@ def TreeDepth(node):
 
 
 
+def pixelDepth(node, x, y, current_depth=0):
+    
+    if node.is_leaf():
+        
+        for px, py, _ in node.pixels:
+            if px == x and py == y:
+                return current_depth
+        return -1
+    
+    
+    half_size = node.size // 2
+    
+    if x < node.x + half_size and y < node.y + half_size:
+        return pixelDepth(node.top_left, x, y, current_depth + 1)
+    elif x >= node.x + half_size and y < node.y + half_size:
+        return pixelDepth(node.top_right, x, y, current_depth + 1)
+    elif x < node.x + half_size and y >= node.y + half_size:
+        return pixelDepth(node.bottom_left, x, y, current_depth + 1)
+    elif x >= node.x + half_size and y >= node.y + half_size:
+        return pixelDepth(node.bottom_right, x, y, current_depth + 1)
+
+    return -1 
+
+
+
 # Loading image
 image = load_image("two.jpg")
 
@@ -118,3 +150,8 @@ print(f"The depth of the quadtree is: {depth}")
 target_size_for_compress = 8
 compressed_image = compress_image(image, target_size_for_compress)
 save_image(compressed_image, "compressed_image.png")
+
+
+x, y = 4, 5
+depth = pixelDepth(quadtree, x, y)
+print(f"The pixel at ({x}, {y}) is at depth {depth}")
