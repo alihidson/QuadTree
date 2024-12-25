@@ -72,6 +72,44 @@ def build_quadtree(image, x, y, size):
 
 
 
+def display_and_save_from_quadtree(node, original_image_shape, save_path="reconstructed_image.png"):
+    
+    
+    height, width, channels = original_image_shape
+
+    reconstructed_image = np.zeros((height, width, channels), dtype=np.uint8)
+
+
+    def fill_image(node):
+        if node.is_leaf():
+            for px, py, _ in node.pixels:
+                reconstructed_image[py, px] = node.color
+        else:
+            if node.top_left:
+                fill_image(node.top_left)
+            if node.top_right:
+                fill_image(node.top_right)
+            if node.bottom_left:
+                fill_image(node.bottom_left)
+            if node.bottom_right:
+                fill_image(node.bottom_right)
+    
+    
+    fill_image(node)
+    
+    
+    save_image(reconstructed_image, save_path)
+
+
+    plt.figure(figsize=(8, 8))
+    plt.imshow(reconstructed_image)
+    plt.axis('off')
+    plt.title("Reconstructed Image from Quadtree")
+    plt.show()
+
+
+
+
 def compress_from_quadtree(node, target_size):
     compressed_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
     scale_factor = node.size // target_size
@@ -173,3 +211,6 @@ save_image(compressed_image_from_tree, "compressed_image_from_tree.png")
 x, y = 4, 5
 depth = pixelDepth(quadtree, x, y)
 print(f"The pixel at ({x}, {y}) is at depth {depth}")
+
+
+display_and_save_from_quadtree(quadtree, image.shape, save_path="reconstructed_image.png")
