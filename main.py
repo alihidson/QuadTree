@@ -110,6 +110,55 @@ def display_and_save_from_quadtree(node, original_image_shape, save_path="recons
 
 
 
+
+def searchSubspacesWithRange(node, rect_top_left, rect_bottom_right, original_image_shape):
+    
+    height, width, channels = original_image_shape
+    output_image = np.full((height, width, channels), fill_value=255, dtype=np.uint8)  # White background
+
+    def overlaps(node, rect_top_left, rect_bottom_right):
+        
+        node_rect_top_left = (node.x, node.y)
+        node_rect_bottom_right = (node.x + node.size - 1, node.y + node.size - 1)
+
+        return not (
+            node_rect_bottom_right[0] < rect_top_left[0] or
+            node_rect_top_left[0] > rect_bottom_right[0] or
+            node_rect_bottom_right[1] < rect_top_left[1] or
+            node_rect_top_left[1] > rect_bottom_right[1]
+        )
+
+    def fill_output_image(node):
+        
+        if node.is_leaf():
+            if overlaps(node, rect_top_left, rect_bottom_right):
+                for px, py, _ in node.pixels:
+                    if rect_top_left[0] <= px <= rect_bottom_right[0] and rect_top_left[1] <= py <= rect_bottom_right[1]:
+                        output_image[py, px] = node.color
+        else:
+            if node.top_left and overlaps(node.top_left, rect_top_left, rect_bottom_right):
+                fill_output_image(node.top_left)
+            if node.top_right and overlaps(node.top_right, rect_top_left, rect_bottom_right):
+                fill_output_image(node.top_right)
+            if node.bottom_left and overlaps(node.bottom_left, rect_top_left, rect_bottom_right):
+                fill_output_image(node.bottom_left)
+            if node.bottom_right and overlaps(node.bottom_right, rect_top_left, rect_bottom_right):
+                fill_output_image(node.bottom_right)
+
+    fill_output_image(node)
+
+    # Display and save the resulting image
+    save_image(output_image, "subspaces_in_range.png")
+
+    plt.figure(figsize=(8, 8))
+    plt.imshow(output_image)
+    plt.axis('off')
+    plt.title("Subspaces in Range")
+    plt.show()
+
+
+
+
 def compress_from_quadtree(node, target_size):
     compressed_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
     scale_factor = node.size // target_size
@@ -189,7 +238,7 @@ def pixelDepth(node, x, y, current_depth=1):
 
 
 # Loading image
-image = load_image("one-color.png")
+image = load_image("two-2-2.png")
 
 height, width, _ = image.shape
 
@@ -212,5 +261,12 @@ x, y = 4, 5
 depth = pixelDepth(quadtree, x, y)
 print(f"The pixel at ({x}, {y}) is at depth {depth}")
 
+# Example usage:
+rect_top_left = (3, 2)  # x, y coordinates of the top-left corner
+rect_bottom_right = (200, 100)  # x, y coordinates of the bottom-right corner
 
-display_and_save_from_quadtree(quadtree, image.shape, save_path="reconstructed_image.png")
+searchSubspacesWithRange(quadtree, rect_top_left, rect_bottom_right, image.shape)
+
+
+
+# display_and_save_from_quadtree(quadtree, image.shape, save_path="reconstructed_image.png")
