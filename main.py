@@ -54,19 +54,46 @@ def build_quadtree(image, x, y, size):
     if size == 1:
         return Node(x, y, size, color=tuple(image[y, x]), pixels=[(x, y, tuple(image[y, x]))])
 
-    uniform, pixels = is_uniform_color(image, x, y, size)
+
+    # Divide the image region into 4 parts
+    half_size = size // 2
+    top_left = (x, y)
+    top_right = (x + half_size, y)
+    bottom_left = (x, y + half_size)
+    bottom_right = (x + half_size, y + half_size)
+
+    # Create empty node (the root node or internal node without color)
+    node = Node(x, y, size)
     
-    if uniform:
-        return Node(x, y, size, color=tuple(image[y, x]), pixels=pixels)
+    # Check if the region is uniform in color for each part
+    uniform_top_left, pixels_top_left = is_uniform_color(image, *top_left, half_size)
+    uniform_top_right, pixels_top_right = is_uniform_color(image, *top_right, half_size)
+    uniform_bottom_left, pixels_bottom_left = is_uniform_color(image, *bottom_left, half_size)
+    uniform_bottom_right, pixels_bottom_right = is_uniform_color(image, *bottom_right, half_size)
+    
+    
+    
+    if uniform_top_left:
+        node.top_left = Node(*top_left, half_size, color=tuple(image[top_left[1], top_left[0]]), pixels=pixels_top_left)
     else:
-        half_size = size // 2
-        top_left = build_quadtree(image, x, y, half_size)
-        top_right = build_quadtree(image, x + half_size, y, half_size)
-        bottom_left = build_quadtree(image, x, y + half_size, half_size)
-        bottom_right = build_quadtree(image, x + half_size, y + half_size, half_size)
+        node.top_left = build_quadtree(image, *top_left, half_size)
 
-        return Node(x, y, size, top_left=top_left, top_right=top_right, bottom_left=bottom_left, bottom_right=bottom_right)
+    if uniform_top_right:
+        node.top_right = Node(*top_right, half_size, color=tuple(image[top_right[1], top_right[0]]), pixels=pixels_top_right)
+    else:
+        node.top_right = build_quadtree(image, *top_right, half_size)
 
+    if uniform_bottom_left:
+        node.bottom_left = Node(*bottom_left, half_size, color=tuple(image[bottom_left[1], bottom_left[0]]), pixels=pixels_bottom_left)
+    else:
+        node.bottom_left = build_quadtree(image, *bottom_left, half_size)
+
+    if uniform_bottom_right:
+        node.bottom_right = Node(*bottom_right, half_size, color=tuple(image[bottom_right[1], bottom_right[0]]), pixels=pixels_bottom_right)
+    else:
+        node.bottom_right = build_quadtree(image, *bottom_right, half_size)
+
+    return node
 
 
 
@@ -265,8 +292,8 @@ print(f"The pixel at ({x}, {y}) is at depth {depth}")
 rect_top_left = (3, 2)  # x, y coordinates of the top-left corner
 rect_bottom_right = (200, 100)  # x, y coordinates of the bottom-right corner
 
-searchSubspacesWithRange(quadtree, rect_top_left, rect_bottom_right, image.shape)
+# searchSubspacesWithRange(quadtree, rect_top_left, rect_bottom_right, image.shape)
 
 
 
-# display_and_save_from_quadtree(quadtree, image.shape, save_path="reconstructed_image.png")
+display_and_save_from_quadtree(quadtree, image.shape, save_path="reconstructed_image.png")
