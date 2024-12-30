@@ -234,12 +234,12 @@ def TreeDepth(node):
         if node.bottom_right:
             depths.append(TreeDepth(node.bottom_right))
         
-        return 1 + max(depths) if depths else 0
+        return max(depths) if depths else 0
 
 
 
 
-def pixelDepth(node, x, y, current_depth=1):
+def pixelDepth(node, x, y, current_depth=0):
     
     if node.is_leaf():
         
@@ -265,7 +265,7 @@ def pixelDepth(node, x, y, current_depth=1):
 
 
 # Loading image
-image = load_image("two-2-2.png")
+image = load_image("one-color.png")
 
 height, width, _ = image.shape
 
