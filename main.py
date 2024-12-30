@@ -292,7 +292,7 @@ print(f"The depth of the quadtree is: {depth}")
 
 
 # Set the target size
-target_size_for_compress = 8
+target_size_for_compress = 128
 
 # Check and compress the image
 try:
