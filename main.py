@@ -99,40 +99,51 @@ def build_quadtree(image, x, y, size):
 
 
 
-def display_and_save_from_quadtree(node, original_image_shape, save_path="reconstructed_image.png"):
+def display_image(node, target_size):
     
-    
-    height, width, channels = original_image_shape
+    if node.size < target_size:
+        raise ValueError(f"Target size {target_size} is larger than the root node size {node.size}.")
 
-    reconstructed_image = np.zeros((height, width, channels), dtype=np.uint8)
+    # Initialize the image array with the target size
+    image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
 
-
-    def fill_image(node):
+    def fill_image_preorder(node):
         if node.is_leaf():
-            for px, py, _ in node.pixels:
-                reconstructed_image[py, px] = node.color
+            # Calculate where to place the color in the image
+            start_x = node.x
+            start_y = node.y
+            size = node.size
+
+            # Place the node color in the image at the specified position
+            for i in range(start_y, start_y + size):
+                for j in range(start_x, start_x + size):
+                    image[i, j] = node.color
         else:
+            # Pre-order traversal: Process root first, then children
             if node.top_left:
-                fill_image(node.top_left)
+                fill_image_preorder(node.top_left)
             if node.top_right:
-                fill_image(node.top_right)
+                fill_image_preorder(node.top_right)
             if node.bottom_left:
-                fill_image(node.bottom_left)
+                fill_image_preorder(node.bottom_left)
             if node.bottom_right:
-                fill_image(node.bottom_right)
-    
-    
-    fill_image(node)
-    
-    
-    save_image(reconstructed_image, save_path)
+                fill_image_preorder(node.bottom_right)
 
+    # Begin the pre-order traversal to fill the image
+    fill_image_preorder(node)
 
-    plt.figure(figsize=(8, 8))
-    plt.imshow(reconstructed_image)
-    plt.axis('off')
-    plt.title("Reconstructed Image from Quadtree")
+    # Display the image using matplotlib
+    plt.imshow(image)
+    plt.axis('off')  # Hide axis
     plt.show()
+
+    # return image
+
+
+
+
+
+
 
 
 
@@ -278,7 +289,7 @@ def pixelDepth(node, x, y, current_depth=0):
 
 
 # Loading image
-image = load_image("test-2.png")
+image = load_image("hidson.png")
 
 
 height, width, _ = image.shape
@@ -292,7 +303,7 @@ print(f"The depth of the quadtree is: {depth}")
 
 
 # Set the target size
-target_size_for_compress = 128
+target_size_for_compress = 8
 
 # Check and compress the image
 try:
@@ -313,10 +324,10 @@ print(f"The pixel at ({x}, {y}) is at depth {depth}")
 
 # Example usage:
 rect_top_left = (3, 2)  # x, y coordinates of the top-left corner
-rect_bottom_right = (200, 100)  # x, y coordinates of the bottom-right corner
+rect_bottom_right = (100, 50)  # x, y coordinates of the bottom-right corner
 
 # searchSubspacesWithRange(quadtree, rect_top_left, rect_bottom_right, image.shape)
 
 
 
-display_and_save_from_quadtree(quadtree, image.shape, save_path="reconstructed_image.png")
+display_image(quadtree, height)
