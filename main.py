@@ -185,34 +185,46 @@ def searchSubspacesWithRange(node, rect_top_left, rect_bottom_right, original_im
 
 
 
+def compress_image(node, target_size):
+    
+    if node.size < target_size:
+        raise ValueError(f"Target size {target_size} is larger than the root node size {node.size}.")
 
-def compress_from_quadtree(node, target_size):
+    # Ensure the size is divisible
+    if node.size % target_size != 0:
+        raise ValueError(f"Root node size {node.size} must be divisible by target size {target_size}.")
+
+    # Initialize the compressed image array
     compressed_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
+
+    # Calculate the scale factor
     scale_factor = node.size // target_size
 
-    def fill_image_from_node(node):
+    def fill_image_preorder(node):
         if node.is_leaf():
-            
+            # Calculate where to place the color in the compressed image
             start_x = node.x // scale_factor
             start_y = node.y // scale_factor
             size = node.size // scale_factor
 
-            
+            # Fill the corresponding area in the compressed image
             for i in range(start_y, start_y + size):
                 for j in range(start_x, start_x + size):
                     compressed_image[i, j] = node.color
         else:
-            
+            # Pre-order traversal: Process root first, then children
             if node.top_left:
-                fill_image_from_node(node.top_left)
+                fill_image_preorder(node.top_left)
             if node.top_right:
-                fill_image_from_node(node.top_right)
+                fill_image_preorder(node.top_right)
             if node.bottom_left:
-                fill_image_from_node(node.bottom_left)
+                fill_image_preorder(node.bottom_left)
             if node.bottom_right:
-                fill_image_from_node(node.bottom_right)
+                fill_image_preorder(node.bottom_right)
 
-    fill_image_from_node(node)
+    # Begin the pre-order traversal to fill the compressed image
+    fill_image_preorder(node)
+
     return compressed_image
 
 
@@ -222,19 +234,20 @@ def compress_from_quadtree(node, target_size):
 
 def TreeDepth(node):
     if node.is_leaf():
-        return 1
-    else:
-        depths = []
-        if node.top_left:
-            depths.append(TreeDepth(node.top_left))
-        if node.top_right:
-            depths.append(TreeDepth(node.top_right))
-        if node.bottom_left:
-            depths.append(TreeDepth(node.bottom_left))
-        if node.bottom_right:
-            depths.append(TreeDepth(node.bottom_right))
-        
-        return max(depths) if depths else 0
+        return 0  # Leaf nodes are at level 0 from their perspective.
+
+    depths = []
+    if node.top_left:
+        depths.append(TreeDepth(node.top_left))
+    if node.top_right:
+        depths.append(TreeDepth(node.top_right))
+    if node.bottom_left:
+        depths.append(TreeDepth(node.bottom_left))
+    if node.bottom_right:
+        depths.append(TreeDepth(node.bottom_right))
+
+    return 1 + max(depths) if depths else 0
+
 
 
 
@@ -265,7 +278,8 @@ def pixelDepth(node, x, y, current_depth=0):
 
 
 # Loading image
-image = load_image("one-color.png")
+image = load_image("test-2.png")
+
 
 height, width, _ = image.shape
 
@@ -277,12 +291,21 @@ depth = TreeDepth(quadtree)
 print(f"The depth of the quadtree is: {depth}")
 
 
-# compress size of image
+# Set the target size
 target_size_for_compress = 8
-compressed_image_from_tree = compress_from_quadtree(quadtree, target_size_for_compress)
-save_image(compressed_image_from_tree, "compressed_image_from_tree.png")
 
+# Check and compress the image
+try:
+    compressed_image = compress_image(quadtree, target_size_for_compress)
+    save_image(compressed_image, "compressed_image_from_tree_preorder.png")
 
+    plt.figure(figsize=(8, 8))
+    plt.imshow(compressed_image)
+    plt.axis('off')
+    plt.title("Compressed Image (Pre-Order Traversal)")
+    plt.show()
+except ValueError as e:
+    print(f"Error: {e}")
 
 x, y = 4, 5
 depth = pixelDepth(quadtree, x, y)
