@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import csv
 import matplotlib.pyplot as plt
 
 
@@ -17,6 +18,27 @@ class Node:
 
     def is_leaf(self):
         return self.top_left is None and self.top_right is None and self.bottom_left is None and self.bottom_right is None
+
+
+
+
+def read_csv_to_image(csv_file):
+    
+    with open(csv_file, 'r') as file:
+        reader = csv.reader(file)
+        pixels = next(reader)  # First line: pixel indices
+        colors = next(reader)  # Second line: RGB values as strings
+
+    # Convert colors to a NumPy array
+    rgb_values = np.array([list(map(int, color.strip('"').split(','))) for color in colors])
+
+    # Determine the size of the image (e.g., 4x4)
+    size = int(len(pixels) ** 0.5)
+
+    # Reshape the 1D array into a 2D image
+    image_array = rgb_values.reshape((size, size, 3))
+    return image_array
+
 
 
 
@@ -212,7 +234,14 @@ def pixelDepth(node, x, y, current_depth=0):
 
 
 # Loading image
-image = load_image("Hidson-1.png")
+# image = load_image("Hidson-1.png")
+
+
+# Example: Replace this with the path to your CSV file
+csv_file_path = "image2_RGB.csv"
+
+# Read the CSV file and convert it to a 2D NumPy array
+image = read_csv_to_image(csv_file_path)
 
 
 height, width, _ = image.shape
@@ -226,7 +255,7 @@ print(f"The depth of the quadtree is: {depth}")
 
 
 # Set the target size
-target_size_for_compress = 8
+target_size_for_compress = 4
 
 # Check and compress the image
 try:
@@ -243,7 +272,8 @@ except ValueError as e:
 
 
 
-x, y = 4, 5
+# x, y = 147, 147
+x, y = 7, 7
 depth = pixelDepth(quadtree, x, y)
 if depth != -1:
     print(f"The pixel at ({x}, {y}) is at depth {depth} in the quadtree.")
