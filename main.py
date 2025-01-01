@@ -198,6 +198,43 @@ def searchSubspacesWithRange(node, x1, y1, x2, y2):
 
 
 
+def mask(node, x1, y1, x2, y2):
+    
+    if node.is_leaf():
+        start_x = node.x
+        start_y = node.y
+        end_x = start_x + node.size
+        end_y = start_y + node.size
+        
+        if (start_x < x2 and end_x > x1) and (start_y < y2 and end_y > y1):
+            node.color = (255, 255, 255)
+            return node
+        else:
+            return node
+    
+    
+    if node.top_left:
+        node.top_left = mask(node.top_left, x1, y1, x2, y2)
+        
+    if node.top_right:
+        node.top_right = mask(node.top_right, x1, y1, x2, y2)
+        
+    if node.bottom_left:
+        node.bottom_left = mask(node.bottom_left, x1, y1, x2, y2)
+        
+    if node.bottom_right:
+        node.bottom_right = mask(node.bottom_right, x1, y1, x2, y2)
+
+    
+    if node.top_left == None and node.top_right == None and node.bottom_left == None and node.bottom_right == None:
+        return None
+
+
+    return node
+
+
+
+
 
 
 
@@ -347,11 +384,19 @@ else:
 x1, y1 = 170, 50
 x2, y2 = 220, 140
 
-new_quadtree = searchSubspacesWithRange(quadtree, x1, y1, x2, y2)
+copy_quadtree_1 = copy_tree(quadtree)
+new_quadtree_sub = searchSubspacesWithRange(copy_quadtree_1, x1, y1, x2, y2)
 
 
-new_size = new_quadtree.size
-display_image(new_quadtree, new_size)
+copy_quadtree_2 = copy_tree(quadtree)
+new_quadtree_mask = mask(copy_quadtree_2, x1, y1, x2, y2)
 
 
-display_image(original_quadtree, height)
+new_size = new_quadtree_sub.size
+display_image(new_quadtree_sub, new_size)
+
+new_size = new_quadtree_mask.size
+display_image(new_quadtree_mask, new_size)
+
+
+display_image(quadtree, height)
