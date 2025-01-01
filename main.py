@@ -145,6 +145,46 @@ def display_image(node, target_size):
 
 
 
+def searchSubspacesWithRange(node, x1, y1, x2, y2):
+    
+    if node.is_leaf():
+        start_x = node.x
+        start_y = node.y
+        end_x = start_x + node.size
+        end_y = start_y + node.size
+        
+        if (start_x < x2 and end_x > x1) and (start_y < y2 and end_y > y1):
+            return node
+        else:
+            node.color = (255, 255, 255)
+            return node
+    
+    
+    if node.top_left:
+        node.top_left = searchSubspacesWithRange(node.top_left, x1, y1, x2, y2)
+        
+    if node.top_right:
+        node.top_right = searchSubspacesWithRange(node.top_right, x1, y1, x2, y2)
+        
+    if node.bottom_left:
+        node.bottom_left = searchSubspacesWithRange(node.bottom_left, x1, y1, x2, y2)
+        
+    if node.bottom_right:
+        node.bottom_right = searchSubspacesWithRange(node.bottom_right, x1, y1, x2, y2)
+
+    
+    if node.top_left == None and node.top_right == None and node.bottom_left == None and node.bottom_right == None:
+        return None
+
+
+    return node
+
+
+
+
+
+
+
 
 def compress_image(node, target_size):
     if node.size < target_size:
@@ -234,20 +274,23 @@ def pixelDepth(node, x, y, current_depth=0):
 
 
 # Loading image
-# image = load_image("Hidson-1.png")
+image = load_image("Hidson-1.png")
 
 
 # Example: Replace this with the path to your CSV file
-csv_file_path = "image2_RGB.csv"
+# csv_file_path = "image2_RGB.csv"
 
 # Read the CSV file and convert it to a 2D NumPy array
-image = read_csv_to_image(csv_file_path)
+# image = read_csv_to_image(csv_file_path)
 
 
 height, width, _ = image.shape
 
 if height == width:
     quadtree = build_quadtree(image, 0, 0, height)
+
+
+
 
 # Calculate and print tree depth
 depth = TreeDepth(quadtree)
@@ -279,6 +322,19 @@ if depth != -1:
     print(f"The pixel at ({x}, {y}) is at depth {depth} in the quadtree.")
 else:
     print(f"The pixel at ({x}, {y}) was not found in the quadtree.")
+    
 
 
-display_image(quadtree, height)
+
+# test searchSubspacesWithRange
+x1, y1 = 170, 50
+x2, y2 = 220, 140
+
+new_quadtree = searchSubspacesWithRange(quadtree, x1, y1, x2, y2)
+
+
+new_size = new_quadtree.size
+display_image(new_quadtree, new_size)
+
+
+# display_image(quadtree, height)
