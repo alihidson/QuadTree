@@ -137,10 +137,13 @@ def display_image(node, target_size):
 
     fill_image_preorder(node)
 
+    # Show the image using matplotlib
     plt.imshow(image)
     plt.axis('off')
     plt.show()
 
+    # Return the image array for later use
+    return image
 
 
 
@@ -239,39 +242,34 @@ def mask(node, x1, y1, x2, y2):
 
 
 
-def compress_image(node, target_size):
+def compress_tree(node, target_size):
     if node.size < target_size:
         raise ValueError(f"Target size {target_size} is larger than the root node size {node.size}.")
 
     if node.size % target_size != 0:
         raise ValueError(f"Root node size {node.size} must be divisible by target size {target_size}.")
 
-    compressed_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
-
     scale_factor = node.size // target_size
 
-    def fill_image_preorder(node):
+    def compress_preorder(node):
         if node.is_leaf():
-            start_x = node.x // scale_factor
-            start_y = node.y // scale_factor
-            size = node.size // scale_factor
-
-            for i in range(start_y, start_y + size):
-                for j in range(start_x, start_x + size):
-                    compressed_image[i, j] = node.color
+            # Adjust node size and color
+            node.size //= scale_factor
+            node.x //= scale_factor
+            node.y //= scale_factor
         else:
             if node.top_left:
-                fill_image_preorder(node.top_left)
+                compress_preorder(node.top_left)
             if node.top_right:
-                fill_image_preorder(node.top_right)
+                compress_preorder(node.top_right)
             if node.bottom_left:
-                fill_image_preorder(node.bottom_left)
+                compress_preorder(node.bottom_left)
             if node.bottom_right:
-                fill_image_preorder(node.bottom_right)
+                compress_preorder(node.bottom_right)
 
-    fill_image_preorder(node)
+    compress_preorder(node)
+    return node
 
-    return compressed_image
 
 
 
@@ -343,29 +341,14 @@ if height == width:
     quadtree = build_quadtree(image, 0, 0, height)
 
 
-original_quadtree = copy_tree(quadtree)
-
 
 # Calculate and print tree depth
 depth = TreeDepth(quadtree)
 print(f"The depth of the quadtree is: {depth}")
 
 
-# Set the target size
-target_size_for_compress = 4
+display_image(quadtree, height)
 
-# Check and compress the image
-try:
-    compressed_image = compress_image(quadtree, target_size_for_compress)
-    save_image(compressed_image, "compressed_image_from_tree_preorder.png")
-
-    plt.figure(figsize=(8, 8))
-    plt.imshow(compressed_image)
-    plt.axis('off')
-    plt.title("Compressed Image")
-    plt.show()
-except ValueError as e:
-    print(f"Error: {e}")
 
 
 
@@ -386,17 +369,21 @@ x2, y2 = 220, 140
 
 copy_quadtree_1 = copy_tree(quadtree)
 new_quadtree_sub = searchSubspacesWithRange(copy_quadtree_1, x1, y1, x2, y2)
+new_size = new_quadtree_sub.size
+image_array_of_sub = display_image(new_quadtree_sub, new_size)
+save_image(image_array_of_sub, "image_from_sub.png")
+
 
 
 copy_quadtree_2 = copy_tree(quadtree)
 new_quadtree_mask = mask(copy_quadtree_2, x1, y1, x2, y2)
-
-
-new_size = new_quadtree_sub.size
-display_image(new_quadtree_sub, new_size)
-
 new_size = new_quadtree_mask.size
-display_image(new_quadtree_mask, new_size)
+image_array_of_mask = display_image(new_quadtree_mask, new_size)
+save_image(image_array_of_mask, "image_from_mask.png")
 
 
-display_image(quadtree, height)
+target_size_for_compress = 4
+copy_quadtree_3 = copy_tree(quadtree)
+new_quadtree_compressed = compress_tree(copy_quadtree_3, target_size_for_compress)
+compressed_image = display_image(new_quadtree_compressed, target_size_for_compress)
+save_image(compressed_image, "compressed-image.png")
