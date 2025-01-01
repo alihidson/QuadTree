@@ -144,6 +144,22 @@ def display_image(node, target_size):
 
 
 
+def copy_tree(node):
+    if node is None:
+        return None
+    
+    new_node = Node(node.x, node.y, node.size, node.color)
+    
+    new_node.top_left = copy_tree(node.top_left)
+    new_node.top_right = copy_tree(node.top_right)
+    new_node.bottom_left = copy_tree(node.bottom_left)
+    new_node.bottom_right = copy_tree(node.bottom_right)
+    
+    return new_node
+
+
+
+
 
 def searchSubspacesWithRange(node, x1, y1, x2, y2):
     
@@ -290,6 +306,7 @@ if height == width:
     quadtree = build_quadtree(image, 0, 0, height)
 
 
+original_quadtree = copy_tree(quadtree)
 
 
 # Calculate and print tree depth
@@ -337,4 +354,4 @@ new_size = new_quadtree.size
 display_image(new_quadtree, new_size)
 
 
-# display_image(quadtree, height)
+display_image(original_quadtree, height)
