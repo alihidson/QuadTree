@@ -3,21 +3,7 @@ from PIL import Image
 import csv
 import matplotlib.pyplot as plt
 
-
-class Node:
-    def __init__(self, x, y, size, color=None):
-        self.x = x
-        self.y = y
-        self.size = size
-        self.color = color
-
-        self.top_left = None
-        self.top_right = None
-        self.bottom_left = None
-        self.bottom_right = None
-
-    def is_leaf(self):
-        return self.top_left is None and self.top_right is None and self.bottom_left is None and self.bottom_right is None
+from Node import Node
 
 
 
@@ -32,7 +18,7 @@ def read_csv_to_image(csv_file):
     # Convert colors to a NumPy array
     rgb_values = np.array([list(map(int, color.strip('"').split(','))) for color in colors])
 
-    # Determine the size of the image (e.g., 4x4)
+    # Determine the size of the image
     size = int(len(pixels) ** 0.5)
 
     # Reshape the 1D array into a 2D image
@@ -142,12 +128,15 @@ def display_image(node, target_size):
     plt.axis('off')
     plt.show()
 
-    # Return the image array for later use
+    # Return the image array
     return image
 
 
 
+
+
 def copy_tree(node):
+    
     if node is None:
         return None
     
@@ -290,45 +279,51 @@ def TreeDepth(node):
     if node.bottom_right:
         depths.append(TreeDepth(node.bottom_right))
 
-    return 1 + max(depths) if depths else 0
+    if depths != None:
+        return (1 + max(depths))
+    else:
+        return 0
 
 
 
 
 
 def pixelDepth(node, x, y, current_depth=0):
-    # If the node is a leaf, check if the pixel matches the node's first pixel
+    
     if node.is_leaf():
         start_x = node.x
         start_y = node.y
         if start_x <= x < start_x + node.size and start_y <= y < start_y + node.size:
             return current_depth
-        return -1  # Pixel is not in this node
+        return -1
 
-    # Determine the size of each child quadrant
+    
     half_size = node.size // 2
 
-    # Check which quadrant the pixel belongs to and recurse into that quadrant
+    
     if x < node.x + half_size and y < node.y + half_size:
         return pixelDepth(node.top_left, x, y, current_depth + 1)
+    
     elif x >= node.x + half_size and y < node.y + half_size:
         return pixelDepth(node.top_right, x, y, current_depth + 1)
+    
     elif x < node.x + half_size and y >= node.y + half_size:
         return pixelDepth(node.bottom_left, x, y, current_depth + 1)
+    
     elif x >= node.x + half_size and y >= node.y + half_size:
         return pixelDepth(node.bottom_right, x, y, current_depth + 1)
 
-    # If none of the conditions are met, return -1 (pixel not found)
+    # if not found pixel in the quadtree
     return -1
 
 
 
 
-# Loading image
+# Loading real image
 image = load_image("Hidson-1.png")
 
 
-# Example: Replace this with the path to your CSV file
+# file path of CSV
 # csv_file_path = "image2_RGB.csv"
 
 # Read the CSV file and convert it to a 2D NumPy array
@@ -347,12 +342,10 @@ depth = TreeDepth(quadtree)
 print(f"The depth of the quadtree is: {depth}")
 
 
-display_image(quadtree, height)
 
 
 
-
-# x, y = 147, 147
+# test pixelDepth
 x, y = 7, 7
 depth = pixelDepth(quadtree, x, y)
 if depth != -1:
@@ -360,6 +353,11 @@ if depth != -1:
 else:
     print(f"The pixel at ({x}, {y}) was not found in the quadtree.")
     
+
+
+
+display_image(quadtree, height)
+
 
 
 
@@ -375,6 +373,7 @@ save_image(image_array_of_sub, "image_from_sub.png")
 
 
 
+
 copy_quadtree_2 = copy_tree(quadtree)
 new_quadtree_mask = mask(copy_quadtree_2, x1, y1, x2, y2)
 new_size = new_quadtree_mask.size
@@ -382,7 +381,10 @@ image_array_of_mask = display_image(new_quadtree_mask, new_size)
 save_image(image_array_of_mask, "image_from_mask.png")
 
 
+
+
 target_size_for_compress = 4
+
 copy_quadtree_3 = copy_tree(quadtree)
 new_quadtree_compressed = compress_tree(copy_quadtree_3, target_size_for_compress)
 compressed_image = display_image(new_quadtree_compressed, target_size_for_compress)
